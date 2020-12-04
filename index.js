@@ -140,5 +140,3 @@ async function cardTrait(page, type){
     return trait;
   }
 }
-
-client.login('Nzc4MzM4NTE1NjM3MjM5ODA4.X7QiOg.tfPA3a6Dh10kkpiOFZHAVORD33c');

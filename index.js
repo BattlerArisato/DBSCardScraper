@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const puppeteer = require('puppeteer');
 const client = new Discord.Client({ disableEveryone: true });
-const prefix = '-';
+const prefix = '?';
 const searchUrl = 'https://www.tcgplayer.com/search/dragon-ball-super-ccg/product?productLineName=dragon-ball-super-ccg&q=';
 
   client.once('ready', () => {
@@ -20,7 +20,7 @@ const searchUrl = 'https://www.tcgplayer.com/search/dragon-ball-super-ccg/produc
     try{
       await page.goto(`${searchUrl + urlCard}`);
       await page.waitForXPath('//*[@id="app"]/div/section[2]/section/section/span/section/div[1]/div/a[1]', { timeout: 8000 });
-    //Seleccionamos el primer resultado y hacemos click
+    //We select the first result and then click.
       const firstResult = await page.$x('//*[@id="app"]/div/section[2]/section/section/span/section/div[1]/div/a[1]');
       await firstResult[0].click();
       await page.waitForXPath('/html/body/div[4]/section[1]/div/section/div[3]/div[1]/h1');
@@ -29,8 +29,8 @@ const searchUrl = 'https://www.tcgplayer.com/search/dragon-ball-super-ccg/produc
       return message.channel.send('Card could not be found');
     }
 
-    //Traemos los datos de la página
-    //Se trae la imagen
+    //We bring the card data
+    //Card Image
     const srcText = await cardImage(page)
 
     //Card Name
@@ -48,6 +48,9 @@ const searchUrl = 'https://www.tcgplayer.com/search/dragon-ball-super-ccg/produc
     //Character
     const char = await cardChar(page, type);
 
+    //Special Trait
+    const trait = await cardTrait(page, type);
+
     const cardInfo = new Discord.MessageEmbed()
     .setTitle(`${name}`)
     .setDescription(`${effect}`)
@@ -55,19 +58,14 @@ const searchUrl = 'https://www.tcgplayer.com/search/dragon-ball-super-ccg/produc
       { name: 'Card Type', value: type },
       { name: 'Color', value: color },
       { name: 'Character', value: char },
+      { name: 'Special Trait', value: trait }
     )
     .setImage(`${srcText}`);
 
     return message.channel.send(cardInfo);
 
-    //message.channel.send(`${rawText}`);
-
-    //message.channel.send(`${searchUrl + urlCard}`);
-
     browser.close();
-    /*if (command === 'ping'){
-      message.channel.send('pong');
-    }*/
+
   })
 
 async function cardImage(page){
@@ -121,6 +119,25 @@ async function cardChar(page, type){
   }else{
     const char = '-';
     return char;
+  }
+}
+
+async function cardTrait(page, type){
+  if (type.toLowerCase() === 'leader' || type.toLowerCase() === 'battle'){
+    if (type.toLowerCase() === 'battle'){
+      const [el6] = await page.$x('/html/body/div[4]/section[1]/div/section/div[3]/table/tbody/tr/td/dl/dd[7]');
+      const txt6 = await el6.getProperty('textContent');
+      const trait = await txt6.jsonValue();
+      return trait;
+    }else{
+      const [el6] = await page.$x('/html/body/div[4]/section[1]/div/section/div[3]/table/tbody/tr/td/dl/dd[6]');
+      const txt6 = await el6.getProperty('textContent');
+      const trait = await txt6.jsonValue();
+      return trait;
+    }
+  }else{
+    const trait = '-';
+    return trait;
   }
 }
 
